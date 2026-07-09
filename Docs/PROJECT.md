@@ -1,394 +1,199 @@
-\# Project Atlas
+# Project Atlas
 
+## Verzija
 
+v0.2
 
-\*\*Verzija:\*\* 0.1
+## Status
 
-\*\*Datum početka:\*\* 09.07.2026.
+Osnova sistema završena.
 
-\*\*Status:\*\* U razvoju
+---
 
+# Misija projekta
 
+Project Atlas je AI automatizaciona platforma za mala i srednja preduzeća.
 
-\---
+Prvi praktični proizvod je AI recepcionar za firme za čišćenje.
 
+Cilj je da AI može da odgovara na pitanja klijenata koristeći bazu znanja konkretne firme.
 
+---
 
-\# Misija
+# Trenutno završeno
 
+## Sekcija 1/4 — Osnova sistema
 
+### Segment 1/8 — Struktura projekta
 
-Napraviti AI platformu koja automatizuje komunikaciju sa klijentima malih i srednjih preduzeća.
+Status: završeno
 
+Urađeno:
 
+- Napravljen GitHub repozitorijum
+- Otvoren projekat u VS Code
+- Napravljena osnovna struktura foldera
+- Napravljen folder Docs
+- Napravljen folder Knowledge Base
+- Napravljen folder Workflows
+- Napravljen folder Testing
 
-Prvi proizvod:
+---
 
+### Segment 2/8 — Provera n8n okruženja
 
+Status: završeno
 
-AI Recepcionar za firme za čišćenje.
+Urađeno:
 
+- Proveren n8n
+- Proveren OpenAI credential
+- Obrisani stari test workflow-i
+- Pripremljeno čisto okruženje
 
+---
 
-\---
+### Segment 3/8 — Prvi AI chat
 
+Status: završeno
 
+Urađeno:
 
-\# Cilj
+- Napravljen workflow Project Atlas v0.1
+- Dodat Chat Trigger
+- Dodat Basic LLM Chain
+- Dodat OpenAI Chat Model
+- AI uspešno odgovara kroz n8n chat
 
+---
 
+### Segment 4/8 — AI koristi bazu znanja
 
-Doći do prvog klijenta u roku od 90 dana.
+Status: završeno
 
+Urađeno:
 
+- Company.md kopiran u dozvoljeni n8n folder
+- n8n uspešno čita Company.md
+- Code node pretvara fajl u tekst
+- Basic LLM Chain dobija pitanje korisnika i bazu znanja
+- AI odgovara na osnovu baze znanja firme
 
-Dugoročni cilj:
+---
 
+### Segment 5/8 — Export workflow-a
 
+Status: završeno
 
-\- 20 aktivnih klijenata
+Urađeno:
 
-\- 2.000 €+ mesečnog prihoda
+- Workflow eksportovan iz n8n
+- Workflow sačuvan u folder Workflows
+- Workflow sačuvan u GitHub
 
-\- Jedna platforma koja se lako prilagođava različitim delatnostima
+Fajl:
 
+Workflows/project-atlas-v0.2-knowledge-base.json
 
+---
 
-\---
+### Segment 6/8 — Ispravka naziva foldera
 
+Status: završeno
 
+Urađeno:
 
-\# Tehnologije
+- Ispravljen naziv foldera Housekeeping
+- Ažurirana putanja u GitHub projektu
+- Ažurirana putanja u .n8n-files folderu
+- Ažurirana putanja u n8n workflow-u
+- Workflow ponovo testiran
+- Workflow ponovo eksportovan
 
+---
 
+### Segment 7/8 — Test pitanja
 
-\- n8n
+Status: završeno
 
-\- OpenAI API
+Urađeno:
 
-\- GitHub
+- Napravljen folder Testing
+- Napravljen fajl housekeeping-test-questions.md
+- Definisana osnovna test pitanja za AI recepcionara
 
-\- Markdown Knowledge Base
+Fajl:
 
+Testing/housekeeping-test-questions.md
 
+---
 
-Kasnije:
+### Segment 8/8 — Zaključavanje v0.2
 
+Status: završeno
 
+Urađeno:
 
-\- Supabase
+- PROJECT.md ažuriran
+- Verzija v0.2 dokumentovana
+- Sekcija 1/4 završena
 
-\- WhatsApp Business API
+---
 
-\- Google Calendar
+# Trenutna verzija proizvoda
 
-\- Gmail
+Project Atlas v0.2
 
-\- Web aplikacija
+AI recepcionar može da:
 
+- primi pitanje kroz n8n chat
+- pročita Company.md
+- pretvori bazu znanja u tekst
+- pošalje pitanje i bazu znanja AI modelu
+- odgovori korisniku na srpskom jeziku
+- koristi podatke firme Housekeeping Beograd
 
+---
 
-\---
+# Trenutna struktura projekta
 
+project-atlas/
 
+- Assets/
+- Clients/
+- Docs/
+  - README.md
+  - PROJECT.md
+- Knowledge Base/
+  - Housekeeping/
+    - Company.md
+    - faq.md
+    - pricing.md
+    - rules.md
+    - services.md
+- Prompts/
+- Testing/
+  - housekeeping-test-questions.md
+- Workflows/
+  - project-atlas-v0.2-knowledge-base.json
 
-\# Struktura projekta
+---
 
+# Sledeća sekcija
 
+## Sekcija 2/4 — Kvalitet baze znanja
 
-Project Atlas/
+Cilj sledeće sekcije:
 
+Srediti bazu znanja tako da AI daje tačnije, korisnije i prodajno bolje odgovore.
 
+Planirani segmenti:
 
-Knowledge Base/
-
-
-
-Docs/
-
-
-
-Workflows/
-
-
-
-Prompts/
-
-
-
-Assets/
-
-
-
-Testing/
-
-
-
-Clients/
-
-
-
-\---
-
-
-
-\# Knowledge Base
-
-
-
-Housekeeping/
-
-
-
-company.md
-
-
-
-faq.md
-
-
-
-services.md
-
-
-
-pricing.md
-
-
-
-rules.md
-
-
-
-\---
-
-
-
-\# Moduli proizvoda
-
-
-
-\[ ] Knowledge Base
-
-
-
-\[ ] AI Engine
-
-
-
-\[ ] Memory
-
-
-
-\[ ] FAQ Search
-
-
-
-\[ ] Price Estimator
-
-
-
-\[ ] Lead Collector
-
-
-
-\[ ] Email Automation
-
-
-
-\[ ] Calendar
-
-
-
-\[ ] WhatsApp
-
-
-
-\[ ] CRM
-
-
-
-\[ ] Analytics
-
-
-
-\[ ] Admin Panel
-
-
-
-\---
-
-
-
-\# Sprint 1
-
-
-
-\## Cilj
-
-
-
-AI odgovara koristeći bazu znanja.
-
-
-
-\### Zadaci
-
-
-
-\[x] GitHub
-
-
-
-\[x] company.md
-
-
-
-\[x] Docs
-
-
-
-\[x] OpenAI API
-
-
-
-\[x] n8n
-
-
-
-\[ ] faq.md
-
-
-
-\[ ] services.md
-
-
-
-\[ ] pricing.md
-
-
-
-\[ ] rules.md
-
-
-
-\[ ] AI odgovara iz baze znanja
-
-
-
-\---
-
-
-
-\# Pravila razvoja
-
-
-
-1\. Svaki modul mora biti testiran.
-
-
-
-2\. Ne prelazimo na sledeći modul dok prethodni nije završen.
-
-
-
-3\. Sve promene se čuvaju na GitHub-u.
-
-
-
-4\. Svaki dan mora postojati merljiv napredak.
-
-
-
-5\. Ne dodajemo nove tehnologije bez opravdanog razloga.
-
-
-
-\---
-
-
-
-\# Verzije
-
-
-
-\## v0.1
-
-
-
-\- GitHub
-
-\- company.md
-
-\- n8n
-
-\- OpenAI API
-
-
-
-\## v0.2
-
-
-
-Planirano:
-
-
-
-\- AI koristi Knowledge Base
-
-
-
-\## v0.3
-
-
-
-Planirano:
-
-
-
-\- Pamćenje razgovora
-
-
-
-\## v0.4
-
-
-
-Planirano:
-
-
-
-\- Prikupljanje kontakata
-
-
-
-\## v0.5
-
-
-
-Planirano:
-
-
-
-\- Zakazivanje termina
-
-
-
-\---
-
-
-
-\# Ideje
-
-
-
-Ovde upisujemo sve ideje koje dođu tokom razvoja.
-
-
-
-Ne implementiraju se odmah.
-
-
-
-Prvo se procenjuju.
-
+1. Sređivanje Company.md
+2. Popunjavanje services.md
+3. Popunjavanje pricing.md
+4. Popunjavanje faq.md
+5. Popunjavanje rules.md
+6. Testiranje AI odgovora
+7. Ispravka loših odgovora
+8. Zaključavanje v0.3
