@@ -6,7 +6,7 @@ v0.3
 
 ## Status
 
-Osnova sistema završena.
+Kvalitet baze znanja završen.
 
 ---
 
@@ -140,7 +140,7 @@ Urađeno:
 
 ---
 
-# Trenutna verzija proizvoda
+# Verzija posle Sekcije 1/4
 
 Project Atlas v0.2
 
@@ -175,7 +175,7 @@ project-atlas/
 - Testing/
   - housekeeping-test-questions.md
 - Workflows/
-  - project-atlas-v0.2-knowledge-base.json
+  - project-atlas-v0.3-knowledge-base.json
 
 ---
 
@@ -282,7 +282,7 @@ Urađeno:
   - pricing.md
   - faq.md
   - rules.md
-- Workflow eksportovan u Workflows/project-atlas-v0.2-knowledge-base.json
+- Workflow eksportovan u Workflows/project-atlas-v0.3-knowledge-base.json
 
 ---
 
