@@ -2,7 +2,7 @@
 
 ## Verzija
 
-v0.2
+v0.3
 
 ## Status
 
@@ -179,21 +179,158 @@ project-atlas/
 
 ---
 
+---
+
+# Sekcija 2/4 — Kvalitet baze znanja
+
+Status: završeno
+
+## Segment 1/8 — Sređivanje Company.md
+
+Status: završeno
+
+Urađeno:
+
+- Sređen Company.md
+- Podaci firme formatirani profesionalnije
+- Dodata pravila za cene, zakazivanje, plaćanje i lokacije
+- Fajl kopiran u .n8n-files
+
+---
+
+## Segment 2/8 — Popunjavanje services.md
+
+Status: završeno
+
+Urađeno:
+
+- Dodati opisi usluga
+- Definisano kada AI traži dodatne podatke
+- Dodati primeri odgovora za svaku uslugu
+- Fajl kopiran u .n8n-files
+
+---
+
+## Segment 3/8 — Popunjavanje pricing.md
+
+Status: završeno
+
+Urađeno:
+
+- Dodate okvirne cene usluga
+- Dodata pravila da AI ne sme da daje konačnu cenu bez dovoljno podataka
+- Definisani podaci koje AI traži za procenu cene
+- Fajl kopiran u .n8n-files
+
+---
+
+## Segment 4/8 — Popunjavanje faq.md
+
+Status: završeno
+
+Urađeno:
+
+- Dodata česta pitanja
+- Dodati preporučeni odgovori
+- Dodata pitanja za kontakt, plaćanje, lokacije, cene i usluge
+- Fajl kopiran u .n8n-files
+
+---
+
+## Segment 5/8 — Popunjavanje rules.md
+
+Status: završeno
+
+Urađeno:
+
+- Definisana pravila ponašanja AI asistenta
+- Definisana pravila za cene
+- Definisana pravila za zakazivanje
+- Definisana pravila za uključivanje operatera
+- Fajl kopiran u .n8n-files
+
+---
+
+## Segment 6/8 — Testiranje AI odgovora
+
+Status: završeno
+
+Rezultat:
+
+10/10
+
+Urađeno:
+
+- Testirana osnovna pitanja
+- AI uspešno odgovara na pitanja iz baze znanja
+- Rezultat upisan u Testing/housekeeping-test-questions.md
+
+---
+
+## Segment 7/8 — AI čita sve knowledge base fajlove
+
+Status: završeno
+
+Urađeno:
+
+- Workflow promenjen da čita sve .md fajlove iz Housekeeping foldera
+- Read/Write Files from Disk koristi *.md
+- Code node spaja sve fajlove u jednu bazu znanja
+- AI sada koristi:
+  - Company.md
+  - services.md
+  - pricing.md
+  - faq.md
+  - rules.md
+- Workflow eksportovan u Workflows/project-atlas-v0.2-knowledge-base.json
+
+---
+
+## Segment 8/8 — Zaključavanje v0.3
+
+Status: završeno
+
+Urađeno:
+
+- PROJECT.md ažuriran
+- Sekcija 2/4 dokumentovana
+- Verzija v0.3 zaključana
+
+---
+
+# Trenutna verzija proizvoda
+
+Project Atlas v0.3
+
+AI recepcionar sada može da:
+
+- primi pitanje kroz n8n chat
+- pročita sve knowledge base fajlove
+- spoji sve fajlove u jednu bazu znanja
+- koristi podatke firme Housekeeping Beograd
+- odgovara na srpskom jeziku
+- ne izmišlja informacije
+- traži dodatne podatke kada nema dovoljno informacija
+- ne potvrđuje konačnu cenu bez dovoljno podataka
+- ne potvrđuje termin bez provere rasporeda
+
+---
+
 # Sledeća sekcija
 
-## Sekcija 2/4 — Kvalitet baze znanja
+## Sekcija 3/4 — Prikupljanje kontakta i lead podataka
 
 Cilj sledeće sekcije:
 
-Srediti bazu znanja tako da AI daje tačnije, korisnije i prodajno bolje odgovore.
+AI treba da počne da prikuplja podatke korisnika kada korisnik želi cenu, zakazivanje ili kontakt operatera.
 
 Planirani segmenti:
 
-1. Sređivanje Company.md
-2. Popunjavanje services.md
-3. Popunjavanje pricing.md
-4. Popunjavanje faq.md
-5. Popunjavanje rules.md
-6. Testiranje AI odgovora
-7. Ispravka loših odgovora
-8. Zaključavanje v0.3
+1. Definisanje lead podataka
+2. Ažuriranje prompta za prikupljanje kontakta
+3. Dodavanje Google Sheets baze
+4. Upis lead-a u Google Sheets
+5. Testiranje prikupljanja lead-a
+6. Ispravka grešaka
+7. Export workflow-a
+8. Zaključavanje v0.4
