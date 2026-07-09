@@ -32,7 +32,7 @@ AI treba da kaže da je radno vreme od 09 do 17 časova.
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -49,7 +49,7 @@ AI treba da navede broj telefona firme.
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -66,7 +66,7 @@ AI treba da navede email adresu firme.
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -83,7 +83,7 @@ AI može da navede okvir iz baze znanja, ali ne sme da tvrdi konačnu cenu bez d
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -100,7 +100,7 @@ AI treba da kaže da firma donosi profesionalna sredstva i da klijent ne mora da
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -117,7 +117,7 @@ AI treba da objasni razliku između fizičkih i pravnih lica.
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -134,7 +134,7 @@ AI treba da kaže da je Zemun među gradovima/lokacijama koje su navedene u bazi
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -151,7 +151,7 @@ AI ne sme da izmisli termin. Treba da kaže da je potrebno proveriti raspored i 
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -168,7 +168,7 @@ Ako informacija ne postoji jasno u bazi znanja, AI treba da kaže da trenutno ne
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
@@ -185,17 +185,17 @@ AI ne sme da izmisli odgovor. Ako rad posle 22h nije naveden u bazi znanja, treb
 
 Status:
 
-[ ] Prošao  
+[x] Prošao  
 [ ] Nije prošao
 
 ---
 
 # Rezultat testiranja
 
-Datum testiranja:
+Datum testiranja:09.07.2026
 
-Tester:
+Tester:Dalibor
 
-Ukupan rezultat:
+Ukupan rezultat:10/10
 
-Komentar:
+Komentar:Prvo testiranje AI odgovora nakon sređivanja baze znanja.
