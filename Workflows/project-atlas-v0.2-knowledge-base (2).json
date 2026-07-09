@@ -64,7 +64,7 @@
     },
     {
       "parameters": {
-        "fileSelector": "C:\\Users\\dalib\\.n8n-files\\project-atlas\\Knowledge Base\\Housekeeping\\Company.md",
+        "fileSelector": "C:\\Users\\dalib\\.n8n-files\\project-atlas\\Knowledge Base\\Housekeeping\\*.md",
         "options": {}
       },
       "type": "n8n-nodes-base.readWriteFile",
@@ -78,7 +78,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\nconst knowledgeBase = buffer.toString('utf8');\n\nconst chatInput = $('When chat message received').first().json.chatInput;\n\nreturn [\n  {\n    json: {\n      chatInput: chatInput,\n      knowledgeBase: knowledgeBase,\n      loadedAt: new Date().toISOString()\n    }\n  }\n];"
+        "jsCode": "const inputItems = $input.all();\n\nconst knowledgeSections = [];\n\nfor (let i = 0; i < inputItems.length; i++) {\n  const buffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n\n  const fileName =\n    inputItems[i].binary?.data?.fileName ||\n    inputItems[i].binary?.data?.fileNameOriginal ||\n    `knowledge-file-${i + 1}.md`;\n\n  const fileText = buffer.toString('utf8');\n\n  knowledgeSections.push(\n    `\\n\\n---\\nFAJL: ${fileName}\\n---\\n${fileText}`\n  );\n}\n\nconst chatInput = $('When chat message received').first().json.chatInput;\n\nreturn [\n  {\n    json: {\n      chatInput,\n      knowledgeBase: knowledgeSections.join('\\n'),\n      loadedFiles: inputItems.length,\n      loadedAt: new Date().toISOString()\n    }\n  }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -143,7 +143,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "23bbc5cd-0db5-4646-a8c3-62c316cafd16",
+  "versionId": "cb7e3ef9-5acb-46cb-b9ed-464fc9729316",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "3efead02804879ed98f95d4a9c7f390065f5b43c0d45993e885af335154c067c"
