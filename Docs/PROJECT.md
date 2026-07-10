@@ -316,21 +316,68 @@ AI recepcionar sada može da:
 
 ---
 
+# Sekcija 3/4 — Prikupljanje kontakta i lead podataka
+
+Status: završeno
+
+## Segment 7/8 — Export workflow-a
+
+Status: završeno
+
+Urađeno:
+
+- Workflow eksportovan
+- Sačuvan u GitHub projektu
+
+Fajl:
+
+Workflows/project-atlas-v0.4-lead-capture.json
+
+---
+
+## Segment 8/8 — Zaključavanje v0.4
+
+Status: završeno
+
+Urađeno:
+
+- PROJECT.md ažuriran
+- Sekcija 3/4 dokumentovana
+- Verzija v0.4 zaključana
+
+---
+
+# Trenutna verzija proizvoda
+
+Project Atlas v0.4
+
+AI recepcionar sada može da:
+
+- odgovara koristeći kompletnu bazu znanja
+- prikuplja lead podatke tokom razgovora
+- kreira jedan lead po chat sesiji
+- dopunjava isti lead tokom razgovora
+- upisuje i ažurira podatke u Google Sheets
+- razlikuje više klijenata preko session_id
+- čuva kompletan tok razgovora u conversation_text
+
+---
+
 # Sledeća sekcija
 
-## Sekcija 3/4 — Prikupljanje kontakta i lead podataka
+## Sekcija 4/4 — AI Receptionist
 
-Cilj sledeće sekcije:
+Cilj:
 
-AI treba da počne da prikuplja podatke korisnika kada korisnik želi cenu, zakazivanje ili kontakt operatera.
+Napraviti AI recepcionara koji vodi kompletan razgovor sa klijentom i inteligentno prikuplja samo informacije koje nedostaju.
 
 Planirani segmenti:
 
-1. Definisanje lead podataka
-2. Ažuriranje prompta za prikupljanje kontakta
-3. Dodavanje Google Sheets baze
-4. Upis lead-a u Google Sheets
-5. Testiranje prikupljanja lead-a
-6. Ispravka grešaka
-7. Export workflow-a
-8. Zaključavanje v0.4
+1. Pamćenje konteksta razgovora
+2. Inteligentno postavljanje narednog pitanja
+3. Dinamička procena da li ima dovoljno podataka
+4. Generisanje rezimea zahteva
+5. Prosleđivanje operateru
+6. Poboljšanje prompta
+7. Finalno testiranje
+8. Zaključavanje verzije v1.0
