@@ -1,0 +1,482 @@
+{
+  "name": "Project Atlas v0.4 - Lead Capture",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -752,
+        -112
+      ],
+      "id": "2f49727e-fed1-4290-9b92-6124919aafbe",
+      "name": "When chat message received",
+      "webhookId": "c653eaf1-fd21-46b5-92b3-cc3a280313ea"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Pitanje korisnika:\n{{ $('Code in JavaScript').first().json.chatInput }}\n\nBaza znanja firme:\n{{ $('Code in JavaScript').first().json.knowledgeBase }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Ti si AI recepcionar firme Housekeeping Beograd.  Odgovaraj isključivo na srpskom jeziku.  Koristi isključivo informacije iz baze znanja koju dobiješ u poruci.  Ne izmišljaj informacije.  Ako odgovor ne postoji u bazi znanja, reci: \"Trenutno nemam tu informaciju. Molim Vas ostavite broj telefona i operater će Vas kontaktirati.\"  Odgovaraj kratko, jasno, ljubazno i profesionalno.  Uvek persiraj korisniku.  Ne koristi emotikone.  Kada korisnik pita za cenu, ne daj konačnu cenu ako nema dovoljno podataka. Prvo traži dodatne informacije.  Kada korisnik želi zakazivanje, slobodan termin, tačnu cenu, ponudu ili kontakt operatera, tvoj cilj je da prikupiš lead podatke.  Lead podaci su: - ime i prezime - broj telefona - lokacija - tip usluge - kratak opis zahteva - željeni termin, ako korisnik želi zakazivanje - email, ako korisnik želi ponudu, račun ili kontakt putem emaila  Ne traži sve podatke odjednom ako bi odgovor bio predugačak.  Prvo traži najvažnije: - ime i prezime - broj telefona - lokaciju - tip usluge  Ako je korisnik već dao neki podatak, nemoj ga tražiti ponovo.  Ne smeš da kažeš da je termin potvrđen.  Ne smeš da kažeš da je cena konačna.  Ne smeš da kažeš da je operater već obavešten ako podaci nisu upisani u sistem.  Kada prikupiš podatke, reci korisniku: \"Hvala. Zabeležio sam podatke za proveru. Operater će Vas kontaktirati radi potvrde.\"  Ako korisnik ne želi da ostavi podatke, nastavi ljubazno i odgovori samo na osnovu baze znanja."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        816,
+        -112
+      ],
+      "id": "6278e9f1-f0dc-462c-9883-e41467232af9",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        112
+      ],
+      "id": "a78ea518-3dab-44ea-9e70-4f31a468e6e5",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ni2EeVYPDZYpucqb",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:\\Users\\dalib\\.n8n-files\\project-atlas\\Knowledge Base\\Housekeeping\\*.md",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -528,
+        -112
+      ],
+      "id": "91533602-9d00-4297-bd42-911b0eeff154",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\n\nconst knowledgeSections = [];\n\nfor (let i = 0; i < inputItems.length; i++) {\n  const buffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n\n  const fileName =\n    inputItems[i].binary?.data?.fileName ||\n    inputItems[i].binary?.data?.fileNameOriginal ||\n    `knowledge-file-${i + 1}.md`;\n\n  const fileText = buffer.toString('utf8');\n\n  knowledgeSections.push(\n    `\\n\\n---\\nFAJL: ${fileName}\\n---\\n${fileText}`\n  );\n}\n\nconst chatInput = $('When chat message received').first().json.chatInput;\n\nreturn [\n  {\n    json: {\n      chatInput,\n      knowledgeBase: knowledgeSections.join('\\n'),\n      loadedFiles: inputItems.length,\n      loadedAt: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -112
+      ],
+      "id": "905face2-2475-493e-b61f-0befc0a715b7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatInput = $json.chatInput || '';\nconst text = chatInput.toLowerCase();\n\nconst chatTriggerData = $('When chat message received').first().json;\n\nconst sessionId = String(\n  chatTriggerData.sessionId ||\n  chatTriggerData.session_id ||\n  chatTriggerData.chatSessionId ||\n  chatTriggerData.chat_session_id ||\n  'unknown-session'\n);\n\nfunction getBelgradeTimestamp() {\n  return new Date().toLocaleString('sv-SE', {\n    timeZone: 'Europe/Belgrade',\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    second: '2-digit',\n    hour12: false\n  });\n}\n\nfunction extractPhone(input) {\n  const match = input.match(/(?:\\+381|0)6\\d[\\s\\/.-]?\\d{3}[\\s\\/.-]?\\d{3,4}/);\n  return match ? match[0].replace(/[\\s\\/.-]/g, '') : '';\n}\n\nfunction extractName(input) {\n  const patterns = [\n    /moje ime je\\s+([a-zA-ZčćžšđČĆŽŠĐ\\s]+?)(?:,|\\.|telefon|broj|$)/i,\n    /zovem se\\s+([a-zA-ZčćžšđČĆŽŠĐ\\s]+?)(?:,|\\.|telefon|broj|$)/i,\n    /ja sam\\s+([a-zA-ZčćžšđČĆŽŠĐ\\s]+?)(?:,|\\.|telefon|broj|$)/i\n  ];\n\n  for (const pattern of patterns) {\n    const match = input.match(pattern);\n    if (match && match[1]) {\n      return match[1].trim();\n    }\n  }\n\n  return '';\n}\n\nfunction extractLocation(lowerText) {\n  if (lowerText.includes('novi beograd') || lowerText.includes('novom beogradu')) return 'Novi Beograd';\n  if (lowerText.includes('zemun') || lowerText.includes('zemunu')) return 'Zemun';\n  if (lowerText.includes('beograd') || lowerText.includes('beogradu')) return 'Beograd';\n  return '';\n}\n\nfunction extractServiceType(lowerText) {\n  if (lowerText.includes('generalno') || lowerText.includes('generalnog')) return 'Generalno čišćenje';\n  if (lowerText.includes('redovno')) return 'Redovno čišćenje';\n  if (lowerText.includes('dubinsko') || lowerText.includes('dubinskog')) return 'Dubinsko pranje';\n\n  if (\n    lowerText.includes('poslovni prostor') ||\n    lowerText.includes('poslovnog prostora') ||\n    lowerText.includes('održavanje poslovnog')\n  ) {\n    return 'Održavanje poslovnih prostora';\n  }\n\n  return '';\n}\n\nfunction extractPropertyType(lowerText) {\n  if (lowerText.includes('stan')) return 'Stan';\n  if (lowerText.includes('kuća') || lowerText.includes('kuca')) return 'Kuća';\n  if (lowerText.includes('poslovni prostor') || lowerText.includes('kancelarija')) return 'Poslovni prostor';\n  if (lowerText.includes('lokal')) return 'Lokal';\n  if (lowerText.includes('zgrada')) return 'Zgrada';\n  return '';\n}\n\nfunction extractSquareMeters(input) {\n  const match = input.match(/(\\d+)\\s*(m2|m²|kvadrata|kvadratnih|kvm)/i);\n  return match ? match[1] : '';\n}\n\nfunction extractDesiredDate(lowerText) {\n  if (lowerText.includes('danas')) return 'Danas';\n  if (lowerText.includes('sutra')) return 'Sutra';\n\n  if (\n    lowerText.includes('sledeće nedelje') ||\n    lowerText.includes('sledeca nedelja') ||\n    lowerText.includes('sledeća nedelja')\n  ) {\n    return 'Sledeća nedelja';\n  }\n\n  if (lowerText.includes('ove nedelje')) return 'Ove nedelje';\n\n  return '';\n}\n\nfunction extractCustomerType(lowerText) {\n  if (\n    lowerText.includes('firma') ||\n    lowerText.includes('pravno lice') ||\n    lowerText.includes('kompanija') ||\n    lowerText.includes('preduzeće') ||\n    lowerText.includes('preduzece')\n  ) {\n    return 'Pravno lice';\n  }\n\n  if (lowerText.includes('fizičko lice') || lowerText.includes('fizicko lice')) {\n    return 'Fizičko lice';\n  }\n\n  return '';\n}\n\nfunction keepOldOrUseNew(oldValue, newValue) {\n  const oldClean = oldValue ? String(oldValue).trim() : '';\n  const newClean = newValue ? String(newValue).trim() : '';\n\n  if (newClean !== '') {\n    return newClean;\n  }\n\n  return oldClean;\n}\n\nconst timestamp = getBelgradeTimestamp();\n\nconst newData = {\n  name: extractName(chatInput),\n  phone: extractPhone(chatInput),\n  email: '',\n  location: extractLocation(text),\n  service_type: extractServiceType(text),\n  property_type: extractPropertyType(text),\n  square_meters: extractSquareMeters(chatInput),\n  desired_date: extractDesiredDate(text),\n  customer_type: extractCustomerType(text)\n};\n\nconst staticData = $getWorkflowStaticData('global');\n\nif (!staticData.leads) {\n  staticData.leads = {};\n}\n\nconst existingLead = staticData.leads[sessionId] || {};\n\nconst previousConversation = existingLead.conversation_text || '';\n\nconst mergedLead = {\n  created_at: existingLead.created_at || timestamp,\n  updated_at: timestamp,\n  session_id: sessionId,\n  source: 'n8n-chat',\n\n  name: keepOldOrUseNew(existingLead.name, newData.name),\n  phone: keepOldOrUseNew(existingLead.phone, newData.phone),\n  email: keepOldOrUseNew(existingLead.email, newData.email),\n  location: keepOldOrUseNew(existingLead.location, newData.location),\n  service_type: keepOldOrUseNew(existingLead.service_type, newData.service_type),\n  property_type: keepOldOrUseNew(existingLead.property_type, newData.property_type),\n  square_meters: keepOldOrUseNew(existingLead.square_meters, newData.square_meters),\n  desired_date: keepOldOrUseNew(existingLead.desired_date, newData.desired_date),\n  customer_type: keepOldOrUseNew(existingLead.customer_type, newData.customer_type),\n\n  request_summary: chatInput,\n  status: 'new',\n  notes: 'Lead se dopunjava kroz razgovor. Potrebna provera operatera.',\n  conversation_text: previousConversation\n    ? `${previousConversation}\\n---\\n${chatInput}`\n    : chatInput\n};\n\nstaticData.leads[sessionId] = mergedLead;\n\nreturn [\n  {\n    json: mergedLead\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -112
+      ],
+      "id": "2a8a03c8-81f9-482b-9994-5fe0ca035ff0",
+      "name": "Prepare Lead Data"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "created_at": "={{ $json.created_at }}",
+            "source": "={{ $json.source }}",
+            "name": "={{ $json.name }}",
+            "phone": "={{ $json.phone ? \"'\" + $json.phone : \"\" }}",
+            "email": "={{ $json.email }}",
+            "location": "={{ $json.location }}",
+            "service_type": "={{ $json.service_type }}",
+            "property_type": "={{ $json.property_type }}",
+            "desired_date": "={{ $json.desired_date }}",
+            "customer_type": "={{ $json.customer_type }}",
+            "status": "={{ $json.status }}",
+            "notes": "={{ $json.notes }}",
+            "square_meters": "={{ $json.square_meters }}",
+            "request_summary": "={{ $json.request_summary }}",
+            "conversation_text": "={{ $json.conversation_text }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "session_id": "={{ $json.session_id }}"
+          },
+          "matchingColumns": [
+            "session_id"
+          ],
+          "schema": [
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "service_type",
+              "displayName": "service_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "square_meters",
+              "displayName": "square_meters",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "desired_date",
+              "displayName": "desired_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_type",
+              "displayName": "customer_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_summary",
+              "displayName": "request_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_text",
+              "displayName": "conversation_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        -112
+      ],
+      "id": "7f478402-cae9-4b14-84b6-811e4e804866",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RI5VTCenYoItLapx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg",
+          "mode": "list",
+          "cachedResultName": "Project Atlas - Housekeeping Leads ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "session_id",
+              "lookupValue": "={{ $('Prepare Lead Data').first().json.session_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        -112
+      ],
+      "id": "0884ca2e-d1fa-4f47-b6a2-ee9310367650",
+      "name": "Find Existing Lead",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RI5VTCenYoItLapx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const newLead = $('Prepare Lead Data').first().json;\n\nconst foundRows = $input.all();\n\nlet existingLead = {};\n\nif (\n  foundRows.length > 0 &&\n  foundRows[0].json &&\n  foundRows[0].json.session_id &&\n  String(foundRows[0].json.session_id) === String(newLead.session_id)\n) {\n  existingLead = foundRows[0].json;\n}\n\nfunction keepOldOrUseNew(oldValue, newValue) {\n  const oldClean = oldValue ? String(oldValue).trim() : '';\n  const newClean = newValue ? String(newValue).trim() : '';\n\n  if (newClean !== '') {\n    return newClean;\n  }\n\n  return oldClean;\n}\n\nfunction mergeConversation(oldText, newText) {\n  const oldClean = oldText ? String(oldText).trim() : '';\n  const newClean = newText ? String(newText).trim() : '';\n\n  if (!oldClean) return newClean;\n  if (!newClean) return oldClean;\n\n  if (oldClean.includes(newClean)) return oldClean;\n\n  return `${oldClean}\\n---\\n${newClean}`;\n}\n\nconst mergedLead = {\n  created_at: existingLead.created_at || newLead.created_at,\n  updated_at: newLead.updated_at,\n  session_id: newLead.session_id,\n  source: newLead.source,\n\n  name: keepOldOrUseNew(existingLead.name, newLead.name),\n  phone: keepOldOrUseNew(existingLead.phone, newLead.phone),\n  email: keepOldOrUseNew(existingLead.email, newLead.email),\n  location: keepOldOrUseNew(existingLead.location, newLead.location),\n  service_type: keepOldOrUseNew(existingLead.service_type, newLead.service_type),\n  property_type: keepOldOrUseNew(existingLead.property_type, newLead.property_type),\n  square_meters: keepOldOrUseNew(existingLead.square_meters, newLead.square_meters),\n  desired_date: keepOldOrUseNew(existingLead.desired_date, newLead.desired_date),\n  customer_type: keepOldOrUseNew(existingLead.customer_type, newLead.customer_type),\n\n  request_summary: newLead.request_summary,\n  status: existingLead.status || newLead.status || 'new',\n  notes: 'Lead se dopunjava kroz razgovor. Potrebna provera operatera.',\n  conversation_text: mergeConversation(existingLead.conversation_text, newLead.conversation_text)\n};\n\nreturn [\n  {\n    json: mergedLead\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -112
+      ],
+      "id": "249c3897-0a97-468e-811e-ed6a933c6691",
+      "name": "Merge Lead Data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Prepare Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Find Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Existing Lead": {
+      "main": [
+        [
+          {
+            "node": "Merge Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9dc7f70b-a29d-484e-937d-bf3e136a0785",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3efead02804879ed98f95d4a9c7f390065f5b43c0d45993e885af335154c067c"
+  },
+  "nodeGroups": [],
+  "id": "QW6PMWv1MLyENtyk",
+  "tags": []
+}
