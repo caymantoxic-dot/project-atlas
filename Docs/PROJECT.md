@@ -381,3 +381,28 @@ Planirani segmenti:
 6. Poboljšanje prompta
 7. Finalno testiranje
 8. Zaključavanje verzije v1.0
+---
+
+## Segment 2/8 — Standardizacija Prompt Engine-a
+
+Status: završeno
+
+Urađeno:
+
+- Kreiran Prompt Engine.
+- Razdvojene odgovornosti AI modula.
+- Kreiran zajednički sistem pravila.
+- Definisan Conversation Manager.
+- Definisan Lead Extraction modul.
+- Definisan Operator Summary modul.
+- AI Receptionist povezan sa svim prompt modulima.
+
+Kreirani fajlovi:
+
+C:\Users\dalib\OneDrive\Dokumenti\GitHub\project-atlas\Prompts\
+
+- ai-receptionist.md
+- system-rules.md
+- conversation-manager.md
+- lead-extraction.md
+- operator-summary.md
