@@ -63,3 +63,14 @@ Rezime treba da omogući operateru da odmah razume:
 - šta traži,
 - koje informacije već postoje,
 - koje informacije eventualno nedostaju.
+
+---
+
+## Predaja iz workflow-a
+
+Kada workflow prosledi `handoff_required = true`:
+
+- interni `operator_summary` se čuva za operatera i ne prikazuje korisniku;
+- korisniku se prenosi samo kratka potvrda iz `user_completion_message`;
+- ne postavlja se novo pitanje;
+- status `handed_off` znači da je kompletan zapis upisan u operaterski Google Sheets kanal.

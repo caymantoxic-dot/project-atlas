@@ -406,3 +406,169 @@ C:\Users\dalib\OneDrive\Dokumenti\GitHub\project-atlas\Prompts\
 - conversation-manager.md
 - lead-extraction.md
 - operator-summary.md
+---
+
+## Segment 3/8 — Povezivanje Prompt Engine-a sa n8n
+
+Status: Završeno
+
+### Urađeno
+
+- Napravljen workflow `Project Atlas v0.5 - AI Receptionist`.
+- Knowledge Base učitava Markdown fajlove.
+- Prompt Engine učitava 5 prompt fajlova.
+- Dodat node `Combine Prompt Files`.
+- Prompt fajlovi objedinjeni u jedan `promptEngine`.
+- `Basic LLM Chain` koristi dinamički `promptEngine`.
+- Lead State ostaje sačuvan tokom celog workflow-a.
+- Workflow uspešno testiran.
+- Workflow eksportovan.
+- Commit i Push završeni.
+
+### Workflow
+
+```
+When chat message received
+        │
+Read/Write Files from Disk
+        │
+Code in JavaScript
+        │
+Prepare Lead Data
+        │
+Find Existing Lead
+        │
+Merge Lead Data
+        │
+Append or update row in sheet
+        │
+Load Prompt Files
+        │
+Combine Prompt Files
+        │
+Basic LLM Chain
+        │
+OpenAI Chat Model
+```
+
+### Eksport
+
+```
+C:\Users\dalib\OneDrive\Dokumenti\GitHub\project-atlas\Workflows\project-atlas-v0.5-ai-receptionist-segment-3.json
+```
+
+---
+
+## Segment 4/8 — Pamćenje konteksta razgovora
+
+Status: završeno
+
+Urađeno:
+
+- istorija razgovora se čuva po `session_id`;
+- korisničke i AI poruke se upisuju hronološki u `conversation_text`;
+- poznata lead polja se prenose u svaki naredni odgovor;
+- ponovljena pitanja za već poznate podatke su uklonjena;
+- workflow je uvezen i testiran u n8n.
+
+Eksport:
+
+`Workflows/project-atlas-v0.5-ai-receptionist-segment-4.json`
+
+---
+
+## Segment 5/8 — Inteligentno naredno pitanje
+
+Status: završeno
+
+Urađeno:
+
+- dodat čvor `Select Next Question`;
+- workflow bira tačno jedno najvažnije pitanje;
+- poznata polja se automatski preskaču;
+- čisti FAQ upiti ne pokreću lead prikupljanje;
+- automatska validacija: 55/55;
+- živi n8n test je prošao za višekoračni razgovor i FAQ;
+- Segment 5 je objavljen kao jedini aktivni AI Receptionist workflow.
+
+Eksport:
+
+`Workflows/project-atlas-v0.5-ai-receptionist-segment-5.json`
+
+---
+
+## Segment 6/8 — Dinamička procena kompletnosti
+
+Status: završeno
+
+Lokalno završeno:
+
+- dodat čvor `Evaluate Lead Completeness`;
+- obavezna polja zavise od vrste usluge i namere korisnika;
+- workflow računa `completion_percent` i `missing_required_fields`;
+- statusi su `informational`, `collecting` i `ready_for_operator`;
+- automatska validacija: 67/67.
+
+- živi n8n test potvrdio je prelaz `collecting` → `ready_for_operator` i 100%;
+- potvrđena verzija je objavljena u n8n.
+
+Eksport:
+
+`Workflows/project-atlas-v0.5-ai-receptionist-segment-6.json`
+
+---
+
+## Segment 7/8 — Rezime i predaja operateru
+
+Status: završeno
+
+Urađeno:
+
+- dodat čvor `Prepare Operator Handoff`;
+- kompletan zahtev dobija strukturiran `operator_summary`;
+- rezime se čuva u `notes` koloni Google Sheets zapisa;
+- kanal predaje je označen kao `google_sheets`;
+- završni status je `handed_off`;
+- korisnik dobija kratku potvrdu bez internog rezimea;
+- automatska validacija: 23/23.
+
+Eksport:
+
+`Workflows/project-atlas-v0.5-ai-receptionist-segment-7.json`
+
+---
+
+## Segment 8/8 — Zaključavanje Project Atlas v1.0
+
+Status: završeno
+
+Urađeno:
+
+- finalni workflow ima 17 jedinstvenih čvorova;
+- objedinjeni su memorija, izbor pitanja, kompletnost, rezime i predaja;
+- finalna regresiona validacija: 21/21;
+- finalni eksport je uvezen i end-to-end testiran u n8n;
+- potvrđeni v1.0 workflow je jedini aktivni objavljeni AI Receptionist;
+- verzija proizvoda zaključana kao Project Atlas v1.0.
+
+Finalni eksport:
+
+`Workflows/project-atlas-v1.0-ai-receptionist.json`
+
+---
+
+# Trenutna verzija proizvoda
+
+Project Atlas v1.0
+
+AI recepcionar sada može da:
+
+- odgovara iz kompletne baze znanja;
+- pamti cijeli razgovor po sesiji;
+- izvlači i dopunjava lead podatke;
+- postavlja tačno jedno relevantno naredno pitanje;
+- dinamički procjenjuje kompletnost prema vrsti usluge;
+- prestaje sa pitanjima kada je zahtev kompletan;
+- generiše operaterski rezime;
+- predaje kompletan zapis operateru kroz Google Sheets;
+- čuva završni status `handed_off`.
