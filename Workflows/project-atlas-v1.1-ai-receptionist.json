@@ -1,0 +1,1214 @@
+{
+  "name": "Project Atlas v1.1 - AI Receptionist",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1200,
+        -1760
+      ],
+      "id": "1b53b0ea-b983-4e31-a427-4331c144b9fa",
+      "name": "When chat message received",
+      "webhookId": "8c4a88a6-90dc-4dce-aee7-e4b6937d77d0"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Poslednja poruka korisnika:\n{{ $json.chatInput }}\n\nIstorija razgovora, hronološki označena ulogama KORISNIK i AI:\n{{ $json.conversation_text || \"Nema prethodnih poruka.\" }}\n\nTrenutni Lead State:\n{{ JSON.stringify({\n  session_id: $json.session_id,\n  name: $json.name,\n  phone: $json.phone,\n  email: $json.email,\n  location: $json.location,\n  service_type: $json.service_type,\n  property_type: $json.property_type,\n  square_meters: $json.square_meters,\n  desired_date: $json.desired_date,\n  customer_type: $json.customer_type,\n  request_summary: $json.request_summary,\n  status: $json.status\n}, null, 2) }}\n\nKontrola narednog pitanja:\n{{ JSON.stringify({\n  collection_required: $json.collection_required,\n  next_field: $json.next_field,\n  next_question: $json.next_question,\n  question_count: $json.question_count\n}, null, 2) }}\n\nDinamička procena kompletnosti:\n{{ JSON.stringify({\n  completeness_applicable: $json.completeness_applicable,\n  required_fields: $json.required_fields,\n  known_required_fields: $json.known_required_fields,\n  missing_required_fields: $json.missing_required_fields,\n  completed_required_count: $json.completed_required_count,\n  total_required_count: $json.total_required_count,\n  completion_percent: $json.completion_percent,\n  is_complete: $json.is_complete,\n  status: $json.status\n}, null, 2) }}\n\nBaza znanja firme:\n{{ $json.knowledgeBase }}\n\nOBAVEZNA PRAVILA ZA OVAJ ODGOVOR:\n1. Prvo odgovori na poslednju poruku korisnika.\n2. Ako next_question nije prazno, postavi samo to jedno pitanje, prirodno uklopljeno u odgovor.\n3. Ne postavljaj nijedno dodatno pitanje i ne nabrajaj missing_required_fields.\n4. Ako je is_complete = true, ne postavljaj novo pitanje za lead podatke.\n5. Ako completeness_applicable = false, odgovori informativno i ne započinji lead prikupljanje.\n6. Ne ponavljaj pitanje za podatak koji već postoji u istoriji ili Lead State objektu.\n\nPredaja operateru:\n{{ JSON.stringify({\n  handoff_required: $json.handoff_required,\n  handoff_channel: $json.handoff_channel,\n  status: $json.status,\n  user_completion_message: $json.user_completion_message\n}, null, 2) }}\n\nZAVRŠNO PRAVILO:\nAko je handoff_required = true, ne postavljaj pitanje. Korisniku prenesi smisao user_completion_message kratko i prirodno. Ne prikazuj interni operator_summary.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "{{ $json.promptEngine }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -160,
+        -1440
+      ],
+      "id": "70716e24-b606-4cf2-b308-d8488e7e953c",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        -1136
+      ],
+      "id": "9405bf94-5f21-4ec8-8a37-095990fd6efd",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ni2EeVYPDZYpucqb",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:\\Users\\dalib\\.n8n-files\\project-atlas\\Knowledge Base\\Housekeeping\\*.md",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1168,
+        -1072
+      ],
+      "id": "35115a2b-b1e2-4473-b5fa-50484d7993c9",
+      "name": "Read/Write Files from Disk",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\n\nconst knowledgeSections = [];\n\nfor (let i = 0; i < inputItems.length; i++) {\n  const buffer = await this.helpers.getBinaryDataBuffer(i, 'data');\n\n  const fileName =\n    inputItems[i].binary?.data?.fileName ||\n    inputItems[i].binary?.data?.fileNameOriginal ||\n    `knowledge-file-${i + 1}.md`;\n\n  const fileText = buffer.toString('utf8');\n\n  knowledgeSections.push(\n    `\\n\\n---\\nFAJL: ${fileName}\\n---\\n${fileText}`\n  );\n}\n\nconst chatInput = $('When chat message received').first().json.chatInput;\n\nreturn [\n  {\n    json: {\n      chatInput,\n      knowledgeBase: knowledgeSections.join('\\n'),\n      loadedFiles: inputItems.length,\n      loadedAt: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        -1760
+      ],
+      "id": "6bdf1d43-f8c8-4d83-8d00-bb7c5d930362",
+      "name": "Code in JavaScript",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatInput = String($json.chatInput || '').trim();\nconst text = chatInput.toLowerCase();\nconst chatTriggerData = $('When chat message received').first().json;\n\nconst sessionId = String(\n  chatTriggerData.sessionId ||\n  chatTriggerData.session_id ||\n  chatTriggerData.chatSessionId ||\n  chatTriggerData.chat_session_id ||\n  'unknown-session'\n);\n\nfunction getBelgradeTimestamp() {\n  return new Date().toLocaleString('sv-SE', {\n    timeZone: 'Europe/Belgrade',\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    second: '2-digit',\n    hour12: false\n  });\n}\n\nfunction extractPhone(input) {\n  const matches = [...input.matchAll(/(?:\\+381|0)6\\d[\\s\\/.-]?\\d{3}[\\s\\/.-]?\\d{3,4}/g)];\n  const match = matches[matches.length - 1];\n  return match ? match[0].replace(/[\\s\\/.-]/g, '') : '';\n}\n\nfunction extractEmail(input) {\n  const matches = [...input.matchAll(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi)];\n  const match = matches[matches.length - 1];\n  return match ? match[0].toLowerCase() : '';\n}\n\nfunction extractName(input) {\n  const patterns = [\n    /moje ime je\\s+([a-zA-ZčćžšđČĆŽŠĐ\\s]+?)(?:,|\\.|telefon|broj|$)/i,\n    /zovem se\\s+([a-zA-ZčćžšđČĆŽŠĐ\\s]+?)(?:,|\\.|telefon|broj|$)/i,\n    /ja sam\\s+([a-zA-ZčćžšđČĆŽŠĐ\\s]+?)(?:,|\\.|telefon|broj|$)/i\n  ];\n\n  for (const pattern of patterns) {\n    const match = input.match(pattern);\n    if (match && match[1]) return match[1].trim();\n  }\n\n  return '';\n}\n\nfunction extractLocation(lowerText) {\n  if (lowerText.includes('novi beograd') || lowerText.includes('novom beogradu')) return 'Novi Beograd';\n  if (lowerText.includes('zemun') || lowerText.includes('zemunu')) return 'Zemun';\n  if (lowerText.includes('beograd') || lowerText.includes('beogradu')) return 'Beograd';\n  return '';\n}\n\nfunction extractServiceType(lowerText) {\n  if (lowerText.includes('generalno') || lowerText.includes('generalnog')) return 'Generalno čišćenje';\n  if (lowerText.includes('redovno')) return 'Redovno čišćenje';\n  if (lowerText.includes('dubinsko') || lowerText.includes('dubinskog')) return 'Dubinsko pranje';\n\n  if (\n    lowerText.includes('poslovni prostor') ||\n    lowerText.includes('poslovnog prostora') ||\n    lowerText.includes('održavanje poslovnog')\n  ) {\n    return 'Održavanje poslovnih prostora';\n  }\n\n  return '';\n}\n\nfunction extractPropertyType(lowerText) {\n  if (lowerText.includes('stan')) return 'Stan';\n  if (lowerText.includes('kuća') || lowerText.includes('kuca')) return 'Kuća';\n  if (\n    lowerText.includes('poslovni prostor') ||\n    lowerText.includes('poslovnog prostora') ||\n    lowerText.includes('poslovnom prostoru') ||\n    lowerText.includes('poslovnim prostorom') ||\n    lowerText.includes('kancelarija') ||\n    lowerText.includes('kancelarije') ||\n    lowerText.includes('kancelariji')\n  ) return 'Poslovni prostor';\n  if (lowerText.includes('lokal')) return 'Lokal';\n  if (lowerText.includes('zgrada')) return 'Zgrada';\n  return '';\n}\n\nfunction extractSquareMeters(input) {\n  const match = input.match(/(\\d+)\\s*(m2|m²|kvadrata|kvadratnih|kvm)/i);\n  return match ? match[1] : '';\n}\n\nfunction extractDesiredDate(input, lowerText) {\n  const explicitDate = input.match(/\\b(\\d{1,2}[.\\/-]\\d{1,2}(?:[.\\/-]\\d{2,4})?)\\b/);\n  if (explicitDate) return explicitDate[1];\n  if (lowerText.includes('danas')) return 'Danas';\n  if (lowerText.includes('sutra')) return 'Sutra';\n  if (\n    lowerText.includes('sledeće nedelje') ||\n    lowerText.includes('sledeca nedelja') ||\n    lowerText.includes('sledeća nedelja')\n  ) return 'Sledeća nedelja';\n  if (lowerText.includes('ove nedelje')) return 'Ove nedelje';\n  return '';\n}\n\nfunction extractCustomerType(lowerText) {\n  if (\n    lowerText.includes('firma') ||\n    lowerText.includes('firme') ||\n    lowerText.includes('firmi') ||\n    lowerText.includes('firmu') ||\n    lowerText.includes('firmom') ||\n    lowerText.includes('pravno lice') ||\n    lowerText.includes('kompanija') ||\n    lowerText.includes('preduzeće') ||\n    lowerText.includes('preduzece')\n  ) return 'Pravno lice';\n  if (lowerText.includes('fizičko lice') || lowerText.includes('fizicko lice')) return 'Fizičko lice';\n  return '';\n}\n\nconst timestamp = getBelgradeTimestamp();\n\nreturn [\n  {\n    json: {\n      created_at: timestamp,\n      updated_at: timestamp,\n      session_id: sessionId,\n      source: 'n8n-chat',\n      name: extractName(chatInput),\n      phone: extractPhone(chatInput),\n      email: extractEmail(chatInput),\n      location: extractLocation(text),\n      service_type: extractServiceType(text),\n      property_type: extractPropertyType(text),\n      square_meters: extractSquareMeters(chatInput),\n      desired_date: extractDesiredDate(chatInput, text),\n      customer_type: extractCustomerType(text),\n      request_summary: chatInput,\n      status: 'new',\n      notes: 'Lead se dopunjava kroz razgovor. Potrebna provera operatera.',\n      conversation_text: ''\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        -1056
+      ],
+      "id": "2e202093-cc04-490b-99eb-6b4b7b3eac4e",
+      "name": "Prepare Lead Data",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "created_at": "={{ $json.created_at }}",
+            "source": "={{ $json.source }}",
+            "name": "={{ $json.name }}",
+            "phone": "={{ $json.phone ? \"'\" + $json.phone : \"\" }}",
+            "email": "={{ $json.email }}",
+            "location": "={{ $json.location }}",
+            "service_type": "={{ $json.service_type }}",
+            "property_type": "={{ $json.property_type }}",
+            "desired_date": "={{ $json.desired_date }}",
+            "customer_type": "={{ $json.customer_type }}",
+            "status": "={{ $json.status }}",
+            "notes": "={{ $json.notes }}",
+            "square_meters": "={{ $json.square_meters }}",
+            "request_summary": "={{ $json.request_summary }}",
+            "conversation_text": "={{ $json.conversation_text }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "session_id": "={{ $json.session_id }}"
+          },
+          "matchingColumns": [
+            "session_id"
+          ],
+          "schema": [
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "service_type",
+              "displayName": "service_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "square_meters",
+              "displayName": "square_meters",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "desired_date",
+              "displayName": "desired_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_type",
+              "displayName": "customer_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_summary",
+              "displayName": "request_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_text",
+              "displayName": "conversation_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -576,
+        -1760
+      ],
+      "id": "4f889a4d-bce3-469b-ab06-e063b8d3c4e5",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RI5VTCenYoItLapx",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg",
+          "mode": "list",
+          "cachedResultName": "Project Atlas - Housekeeping Leads ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "session_id",
+              "lookupValue": "={{ $('Prepare Lead Data').first().json.session_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -784,
+        -1760
+      ],
+      "id": "15e8a4ee-7c53-40b5-b1ce-a6b430124eb9",
+      "name": "Find Existing Lead",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RI5VTCenYoItLapx",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const newLead = $('Prepare Lead Data').first().json;\nconst foundRows = $input.all();\n\nlet existingLead = {};\n\nif (\n  foundRows.length > 0 &&\n  foundRows[0].json &&\n  foundRows[0].json.session_id &&\n  String(foundRows[0].json.session_id) === String(newLead.session_id)\n) {\n  existingLead = foundRows[0].json;\n}\n\nfunction keepOldOrUseNew(oldValue, newValue) {\n  const oldClean = oldValue ? String(oldValue).trim() : '';\n  const newClean = newValue ? String(newValue).trim() : '';\n  return newClean || oldClean;\n}\n\nfunction appendTurn(history, role, message) {\n  const historyClean = history ? String(history).trim() : '';\n  const messageClean = message ? String(message).trim() : '';\n  if (!messageClean) return historyClean;\n\n  const turn = role + ': ' + messageClean;\n  if (!historyClean) return turn;\n\n  const turns = historyClean.split('\\n---\\n');\n  if (turns[turns.length - 1] === turn) return historyClean;\n\n  return historyClean + '\\n---\\n' + turn;\n}\n\nconst hasLeadData = [\n  newLead.name,\n  newLead.phone,\n  newLead.email,\n  newLead.location,\n  newLead.service_type,\n  newLead.property_type,\n  newLead.square_meters,\n  newLead.desired_date,\n  newLead.customer_type\n].some((value) => String(value || '').trim() !== '');\n\nconst mergedLead = {\n  created_at: existingLead.created_at || newLead.created_at,\n  updated_at: newLead.updated_at,\n  session_id: newLead.session_id,\n  source: existingLead.source || newLead.source,\n  name: keepOldOrUseNew(existingLead.name, newLead.name),\n  phone: keepOldOrUseNew(existingLead.phone, newLead.phone),\n  email: keepOldOrUseNew(existingLead.email, newLead.email),\n  location: keepOldOrUseNew(existingLead.location, newLead.location),\n  service_type: keepOldOrUseNew(existingLead.service_type, newLead.service_type),\n  property_type: keepOldOrUseNew(existingLead.property_type, newLead.property_type),\n  square_meters: keepOldOrUseNew(existingLead.square_meters, newLead.square_meters),\n  desired_date: keepOldOrUseNew(existingLead.desired_date, newLead.desired_date),\n  customer_type: keepOldOrUseNew(existingLead.customer_type, newLead.customer_type),\n  request_summary: newLead.request_summary,\n  status: existingLead.status || (hasLeadData ? 'collecting' : 'new'),\n  notes: existingLead.notes || newLead.notes,\n  conversation_text: appendTurn(existingLead.conversation_text, 'KORISNIK', newLead.request_summary)\n};\n\nreturn [{ json: mergedLead }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        -1056
+      ],
+      "id": "c7b30ef4-8700-4c90-a0c4-f02887e09473",
+      "name": "Merge Lead Data",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:\\Users\\dalib\\.n8n-files\\project-atlas\\Prompts\\*.md",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        -1056
+      ],
+      "id": "c44d2714-1921-4e2e-b60b-c164c06da85f",
+      "name": "Load Prompt Files",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const promptItems = $input.all();\n\nconst leadState = $('Prepare Operator Handoff').first().json;\nconst conversationData = $('Code in JavaScript').first().json;\n\nconst combinedPrompts = promptItems\n  .map((item) => {\n    const binaryFile = item.binary?.data;\n\n    if (!binaryFile?.data) {\n      return '';\n    }\n\n    const fileName = binaryFile.fileName || 'unknown-prompt.md';\n    const content = Buffer.from(binaryFile.data, 'base64').toString('utf8');\n\n    return `===== ${fileName} =====\\n${content}`;\n  })\n  .filter((content) => content !== '')\n  .join('\\n\\n');\n\nreturn [\n  {\n    json: {\n      ...leadState,\n      chatInput: conversationData.chatInput || '',\n      knowledgeBase: conversationData.knowledgeBase || '',\n      promptEngine: combinedPrompts,\n      loadedPromptFiles: promptItems.length\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        -1760
+      ],
+      "id": "a26b5adc-c214-4b0a-af1a-8d316ac86a1a",
+      "name": "Combine Prompt Files",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const leadState = $('Combine Prompt Files').first().json;\nconst aiResponse = String($json.text || $json.output || '').trim();\n\nif (!aiResponse) {\n  throw new Error('AI odgovor je prazan; istorija razgovora nije sačuvana.');\n}\n\nfunction appendTurn(history, role, message) {\n  const historyClean = history ? String(history).trim() : '';\n  const messageClean = message ? String(message).trim() : '';\n  const turn = role + ': ' + messageClean;\n  if (!historyClean) return turn;\n  return historyClean + '\\n---\\n' + turn;\n}\n\nconst updatedAt = new Date().toLocaleString('sv-SE', {\n  timeZone: 'Europe/Belgrade',\n  year: 'numeric',\n  month: '2-digit',\n  day: '2-digit',\n  hour: '2-digit',\n  minute: '2-digit',\n  second: '2-digit',\n  hour12: false\n});\n\nreturn [\n  {\n    json: {\n      ...leadState,\n      updated_at: updatedAt,\n      conversation_text: appendTurn(leadState.conversation_text, 'AI', aiResponse),\n      text: aiResponse\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -1440
+      ],
+      "id": "a0c76783-cfba-4506-9512-7517d42aa188",
+      "name": "Store Conversation Context",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "created_at": "={{ $json.created_at }}",
+            "source": "={{ $json.source }}",
+            "name": "={{ $json.name }}",
+            "phone": "={{ $json.phone ? \"'\" + $json.phone : \"\" }}",
+            "email": "={{ $json.email }}",
+            "location": "={{ $json.location }}",
+            "service_type": "={{ $json.service_type }}",
+            "property_type": "={{ $json.property_type }}",
+            "desired_date": "={{ $json.desired_date }}",
+            "customer_type": "={{ $json.customer_type }}",
+            "status": "={{ $json.status }}",
+            "notes": "={{ $json.notes }}",
+            "square_meters": "={{ $json.square_meters }}",
+            "request_summary": "={{ $json.request_summary }}",
+            "conversation_text": "={{ $json.conversation_text }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "session_id": "={{ $json.session_id }}"
+          },
+          "matchingColumns": [
+            "session_id"
+          ],
+          "schema": [
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "service_type",
+              "displayName": "service_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "square_meters",
+              "displayName": "square_meters",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "desired_date",
+              "displayName": "desired_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_type",
+              "displayName": "customer_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "request_summary",
+              "displayName": "request_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_text",
+              "displayName": "conversation_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        320,
+        -1440
+      ],
+      "id": "59bc4557-a311-40ef-a73f-471c2d69a7f1",
+      "name": "Save Conversation Context",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RI5VTCenYoItLapx",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const storedContext = $('Store Conversation Context').first().json;\nreturn [{ json: { text: storedContext.text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -1440
+      ],
+      "id": "d8bb5684-c1aa-466c-a24c-fc0d89e02a53",
+      "name": "Return Chat Response",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = { ...$json };\n\nfunction clean(value) {\n  return value === null || value === undefined ? '' : String(value).trim();\n}\n\nconst latestMessage = clean(lead.request_summary).toLowerCase();\nconst history = clean(lead.conversation_text).toLowerCase();\nconst context = history + '\\n' + latestMessage;\n\nconst knownLeadFields = [\n  lead.service_type,\n  lead.location,\n  lead.property_type,\n  lead.square_meters,\n  lead.desired_date,\n  lead.name,\n  lead.phone,\n  lead.email,\n  lead.customer_type\n].some((value) => clean(value) !== '');\n\nconst collectionIntent = /(?:želim|zelim|treba mi|potrebno mi|zaka(?:z|ž)|termin|ponud|tačn(?:a|u) cen|tacn(?:a|u) cen|koliko košta|koliko kosta|kontakt|pozove|operater|zainteresovan)/i.test(context) || knownLeadFields;\nconst contactRequested = /(?:kontakt|pozove|operater|javi mi se|javite mi se)/i.test(context);\nconst priceRequested = /(?:cen|koliko košta|koliko kosta|ponud)/i.test(context);\nconst service = clean(lead.service_type).toLowerCase();\nconst isBusiness = service.includes('poslov') || clean(lead.customer_type).toLowerCase().includes('pravno');\nconst requiresProperty = service.includes('general') || service.includes('redovno') || service.includes('poslov');\nconst requiresSquareMeters = requiresProperty;\nconst deepCleaningItemsKnown = /(?:sofa|trosed|fotelj|dušek|dusek|stolic|tepih|nameštaj|namestaj|komad)/i.test(context);\n\nconst fieldKnown = {\n  service_type: clean(lead.service_type) !== '',\n  location: clean(lead.location) !== '',\n  property_type: clean(lead.property_type) !== '',\n  square_meters: clean(lead.square_meters) !== '',\n  desired_date: clean(lead.desired_date) !== '',\n  phone: clean(lead.phone) !== '',\n  name: clean(lead.name) !== '',\n  email: clean(lead.email) !== '',\n  customer_type: clean(lead.customer_type) !== '',\n  item_details: deepCleaningItemsKnown\n};\n\nlet priority = [];\n\nif (collectionIntent) {\n  if (contactRequested) {\n    priority = ['phone', 'name', 'service_type', 'location', 'desired_date'];\n  } else {\n    priority.push('service_type', 'location');\n\n    if (isBusiness) {\n      priority.push('customer_type');\n    }\n\n    if (requiresProperty) {\n      priority.push('property_type');\n    }\n\n    if (requiresSquareMeters) {\n      priority.push('square_meters');\n    }\n\n    if (service.includes('dubinsko')) {\n      priority.push('item_details');\n    }\n\n    if (priceRequested) {\n      priority.push('phone', 'name', 'desired_date');\n    } else {\n      priority.push('desired_date', 'phone', 'name');\n    }\n\n    if (isBusiness) {\n      priority.push('email');\n    }\n  }\n}\n\nconst uniquePriority = [...new Set(priority)];\nconst missingFields = uniquePriority.filter((field) => !fieldKnown[field]);\nconst nextField = missingFields[0] || '';\n\nconst questions = {\n  service_type: 'Koja usluga Vam je potrebna?',\n  location: 'U kom delu grada se nalazi objekat?',\n  property_type: 'O kom tipu objekta je reč?',\n  square_meters: 'Kolika je približna kvadratura prostora?',\n  desired_date: 'Koji termin Vam okvirno odgovara?',\n  phone: 'Koji broj telefona operater može da koristi za kontakt?',\n  name: 'Na koje ime da evidentiramo zahtev?',\n  email: 'Na koju email adresu želite da primite ponudu?',\n  customer_type: 'Da li se javljate kao fizičko ili pravno lice?',\n  item_details: 'Šta je potrebno dubinski oprati i koliko komada?'\n};\n\nreturn [\n  {\n    json: {\n      ...lead,\n      collection_required: collectionIntent,\n      required_fields: uniquePriority,\n      missing_fields: missingFields,\n      next_field: nextField,\n      next_question: nextField ? questions[nextField] : '',\n      question_count: nextField ? 1 : 0\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        -1280
+      ],
+      "id": "0f6d9c31-5e4b-4f89-a9d9-e0ce5f3f358c",
+      "name": "Select Next Question",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = { ...$json };\n\nfunction asUniqueList(value) {\n  if (!Array.isArray(value)) return [];\n  return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))];\n}\n\nconst requiredFields = asUniqueList(lead.required_fields);\nconst selectorMissing = new Set(asUniqueList(lead.missing_fields));\nconst knownRequiredFields = requiredFields.filter((field) => !selectorMissing.has(field));\nconst missingRequiredFields = requiredFields.filter((field) => selectorMissing.has(field));\nconst totalRequiredCount = requiredFields.length;\nconst completedRequiredCount = knownRequiredFields.length;\nconst completenessApplicable = Boolean(lead.collection_required) && totalRequiredCount > 0;\nconst completionPercent = completenessApplicable\n  ? Math.round((completedRequiredCount / totalRequiredCount) * 100)\n  : 0;\nconst isComplete = completenessApplicable && missingRequiredFields.length === 0;\n\nlet status = 'informational';\nlet notes = 'Informativni upit bez aktivnog prikupljanja lead podataka.';\n\nif (completenessApplicable) {\n  status = isComplete ? 'ready_for_operator' : 'collecting';\n  notes = isComplete\n    ? 'Lead je kompletan po pravilima izabrane usluge i spreman je za operatera.'\n    : 'Kompletnost ' + completionPercent + '%. Nedostaju polja: ' + missingRequiredFields.join(', ') + '.';\n}\n\nreturn [\n  {\n    json: {\n      ...lead,\n      required_fields: requiredFields,\n      known_required_fields: knownRequiredFields,\n      missing_required_fields: missingRequiredFields,\n      completed_required_count: completedRequiredCount,\n      total_required_count: totalRequiredCount,\n      completion_percent: completionPercent,\n      completeness_applicable: completenessApplicable,\n      is_complete: isComplete,\n      status,\n      notes\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        -1280
+      ],
+      "id": "5a117df2-19a7-493a-9864-88453d925ef4",
+      "name": "Evaluate Lead Completeness",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = { ...$json };\n\nfunction valueOrDash(value) {\n  const clean = value === null || value === undefined ? '' : String(value).trim();\n  return clean || 'Nije prikupljeno';\n}\n\nlet operatorSummary = '';\nlet handoffRequired = false;\nlet handoffChannel = '';\nlet handoffStatus = lead.status;\nlet userCompletionMessage = '';\nlet notes = lead.notes;\n\nif (lead.is_complete === true && lead.status === 'ready_for_operator') {\n  const lines = [\n    'NOVI KOMPLETAN ZAHTEV',\n    'Sesija: ' + valueOrDash(lead.session_id),\n    'Klijent: ' + valueOrDash(lead.name),\n    'Telefon: ' + valueOrDash(lead.phone),\n    'Email: ' + valueOrDash(lead.email),\n    'Usluga: ' + valueOrDash(lead.service_type),\n    'Lokacija: ' + valueOrDash(lead.location),\n    'Objekat: ' + valueOrDash(lead.property_type),\n    'Kvadratura: ' + valueOrDash(lead.square_meters),\n    'Termin: ' + valueOrDash(lead.desired_date),\n    'Tip klijenta: ' + valueOrDash(lead.customer_type),\n    'Poslednji zahtev: ' + valueOrDash(lead.request_summary),\n    'Kompletnost: ' + valueOrDash(lead.completion_percent) + '%'\n  ];\n\n  operatorSummary = lines.join('\\n');\n  handoffRequired = true;\n  handoffChannel = 'google_sheets';\n  handoffStatus = 'handed_off';\n  userCompletionMessage = 'Hvala, zabeležio sam sve potrebne podatke. Zahtev je prosleđen operateru, koji će Vas kontaktirati radi potvrde termina i konačnih detalja.';\n  notes = operatorSummary;\n}\n\nreturn [\n  {\n    json: {\n      ...lead,\n      operator_summary: operatorSummary,\n      handoff_required: handoffRequired,\n      handoff_channel: handoffChannel,\n      user_completion_message: userCompletionMessage,\n      status: handoffStatus,\n      notes\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -1280
+      ],
+      "id": "8c4e6b02-167a-453c-a182-11a73bcaaf4f",
+      "name": "Prepare Operator Handoff",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  text: 'Trenutno ne mogu pouzdano da proverim informacije firme. Vaš zahtev nije potvrđen. Pokušajte ponovo malo kasnije ili kontaktirajte operatera.',\n  failure_code: 'KNOWLEDGE_UNAVAILABLE',\n  saved: false\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -2200
+      ],
+      "id": "34b8d5fd-f5d4-43bb-a25a-c6d1c202d3bd",
+      "name": "Return Knowledge Failure"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  text: 'Trenutno ne mogu da sačuvam vaš zahtev, zato ga neću označiti kao primljenog. Pokušajte ponovo malo kasnije ili kontaktirajte operatera.',\n  failure_code: 'DATA_STORE_UNAVAILABLE',\n  saved: false\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -2200
+      ],
+      "id": "fa6f758b-2c95-477c-a749-f105b8aa0b8a",
+      "name": "Return Sheets Failure"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  text: 'Trenutno ne mogu da obradim poruku. Vaš zahtev nije potvrđen. Pokušajte ponovo malo kasnije ili kontaktirajte operatera.',\n  failure_code: 'AI_UNAVAILABLE',\n  saved: false\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -2200
+      ],
+      "id": "d270ecfb-b5d0-46a7-9afa-b6f7e89635be",
+      "name": "Return AI Failure"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {\n  text: 'Došlo je do privremenog problema i zahtev nije potvrđen. Pokušajte ponovo malo kasnije ili kontaktirajte operatera.',\n  failure_code: 'PROCESSING_FAILURE',\n  saved: false\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -2200
+      ],
+      "id": "8eff66a5-888e-43b3-b81a-2d15ff89d280",
+      "name": "Return Processing Failure"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "111617db-96b5-4f18-b8a8-8b1f01bd18f1-condition",
+              "leftValue": "={{ $json.error || \"\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -640,
+        -1760
+      ],
+      "id": "111617db-96b5-4f18-b8a8-8b1f01bd18f1",
+      "name": "Check Sheets Read Result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "222728ec-a7c6-4029-c9b9-9c2f12ce29f2-condition",
+              "leftValue": "={{ $json.error || \"\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -480,
+        -1440
+      ],
+      "id": "222728ec-a7c6-4029-c9b9-9c2f12ce29f2",
+      "name": "Check Lead Write Result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "333839fd-b8d7-413a-daca-ad3023df30f3-condition",
+              "leftValue": "={{ $json.error || \"\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        -1440
+      ],
+      "id": "333839fd-b8d7-413a-daca-ad3023df30f3",
+      "name": "Check Context Save Result"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Knowledge Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Prepare Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Knowledge Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Find Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Processing Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Check Lead Write Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Existing Lead": {
+      "main": [
+        [
+          {
+            "node": "Check Sheets Read Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Select Next Question",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Processing Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Prompt Files": {
+      "main": [
+        [
+          {
+            "node": "Combine Prompt Files",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Knowledge Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Prompt Files": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Knowledge Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Store Conversation Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return AI Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Conversation Context": {
+      "main": [
+        [
+          {
+            "node": "Save Conversation Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Processing Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Conversation Context": {
+      "main": [
+        [
+          {
+            "node": "Check Context Save Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Next Question": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Lead Completeness",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Processing Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Lead Completeness": {
+      "main": [
+        [
+          {
+            "node": "Prepare Operator Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Processing Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Operator Handoff": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Processing Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Sheets Read Result": {
+      "main": [
+        [
+          {
+            "node": "Return Sheets Failure",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Lead Write Result": {
+      "main": [
+        [
+          {
+            "node": "Return Sheets Failure",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Load Prompt Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Context Save Result": {
+      "main": [
+        [
+          {
+            "node": "Return Sheets Failure",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Chat Response": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Return Processing Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "errorWorkflow": "ATLASERRS2X2026Z",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "versionId": "d474fe68-2c82-4dbc-87ee-37a3469fb08c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3efead02804879ed98f95d4a9c7f390065f5b43c0d45993e885af335154c067c"
+  },
+  "nodeGroups": [],
+  "id": "ATLASV11S2X2026Z",
+  "tags": []
+}

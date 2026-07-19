@@ -1,16 +1,16 @@
 # Project Atlas — MASTER ROADMAP
 
-Datum poslednje provere: 19.07.2026.
+Datum poslednje provere: 20.07.2026.
 
 Ovaj dokument je glavni redosled rada od završenog AI Receptionist modula do proizvoda koji može da se instalira i naplaćuje klijentu.
 
 ## Šta znači „završeno”
 
-- **AI Receptionist v1.0.1:** završeno korektivno izdanje. Workflow je eksportovan, testiran i objavljen u lokalnom n8n-u.
+- **AI Receptionist v1.1:** stabilno lokalno izdanje. Glavni workflow i error workflow su eksportovani, testirani, dokumentovani i objavljeni u lokalnom n8n-u.
 - **Komercijalni MVP:** nije još završen. Mora da radi javno, obavesti operatera, podrži zakazivanje, kontroliše greške i ima postupak instalacije za klijenta.
 - **Poslovni cilj 2.000 EUR mesečno:** ostvaren je tek kada aktivni klijenti zajedno donose najmanje 2.000 EUR mesečnog prihoda. To nije samo tehnički korak.
 
-## Potvrđeno stanje v1.0.1
+## Potvrđeno stanje v1.1
 
 - Segment 4 validacija: 49/49.
 - Segment 5 validacija: 55/55.
@@ -18,10 +18,16 @@ Ovaj dokument je glavni redosled rada od završenog AI Receptionist modula do pr
 - Segment 7 validacija: 23/23.
 - Završna v1.0 validacija: 21/21.
 - Korektivna v1.0.1 validacija: 26/26.
-- Trenutni workflow: `Workflows/project-atlas-v1.0.1-ai-receptionist.json`.
-- v1.0.1 je jedini aktivni Project Atlas workflow; v1.0 je isključen.
+- Segment 2 / v1.1 validacija: 88/88.
+- Trenutni glavni workflow: `Workflows/project-atlas-v1.1-ai-receptionist.json`.
+- Centralni error workflow: `Workflows/project-atlas-v1.1-error-handler.json`.
+- v1.1 je jedini aktivni Project Atlas AI Receptionist; v1.0.1 i v1.0 su isključeni.
 - Živi testovi su potvrdili paralelne sesije, ispravke telefona i kvadrature, FAQ, dubinsko pranje i poslovni scenario.
+- Živi failure testovi su potvrdili kontrolisane kvarove Knowledge Base, Google Sheets i AI-ja bez lažne potvrde korisniku.
+- Error workflow je upisao redigovan `TEST` zapis u Google Sheets tab `Errors`.
+- Proveren je hladni backup `C:\Users\dalib\.n8n\backups\project-atlas-segment-2-cold-20260720-002656` i restart n8n-a.
 - Testni Google Sheets redovi 6–9 uklonjeni su 19.07.2026; pretraga za `ATLAS` vratila je 0 rezultata.
+- Dodatni probni lead `unknown-session` precizno je uklonjen; naknadna pretraga vratila je prazan rezultat.
 - Google Sheets trenutno služi kao evidencija leadova i istorije razgovora.
 
 ## Poznata ograničenja trenutne verzije
@@ -30,9 +36,9 @@ Ovaj dokument je glavni redosled rada od završenog AI Receptionist modula do pr
 - Chat radi u lokalnom n8n okruženju; još nema javnu produkcionu adresu.
 - Knowledge Base i promptovi učitavaju se sa lokalne putanje i moraju se prilagoditi produkcionom serveru.
 - Nema Google Calendar zakazivanja, potvrda ni podsetnika.
-- Nema centralnog error workflow-a, automatskog ponavljanja neuspelih koraka ni produkcionog nadzora.
+- `Errors` tab je trenutno operativni red grešaka koji se pregleda ručno; automatska email notifikacija operateru uvodi se u Segmentu 3.
 - Ponovno učitavanje ručnog n8n chata stvara novi `session_id`; trajni nastavak sesije mora da se reši u javnom web chatu u Segmentu 4.
-- Kontrolisani kvarovi AI-ja i Google Sheets-a još nisu implementirani; rešavaju se u Segmentu 2.
+- Javni Chat Trigger nije uključen; javna webhook adresa namerno nije dostupna do Segmenta 4.
 - Nema pripremljenog instalacionog paketa, sajta, demo snimka, cenovnika, ugovora i pilot-klijenta.
 
 ---
@@ -61,25 +67,29 @@ Završeno kada:
 
 ## Segment 2/8 — Pouzdanost, greške i bezbednost
 
-Status: sledeći
+Status: završeno
 
-Uraditi:
+Urađeno:
 
-- dodati kontrolisane odgovore kada AI, Google Sheets ili Knowledge Base nisu dostupni;
-- napraviti n8n error workflow i obaveštenje o neuspehu;
-- uvesti bezbedno ponavljanje koraka gde je moguće;
-- definisati čuvanje logova, rezervnu kopiju i vraćanje sistema;
-- proveriti da tajne i lični podaci nisu u Git repozitorijumu.
+- dodati su kontrolisani odgovori kada AI, Google Sheets ili Knowledge Base nisu dostupni;
+- napravljen je n8n error workflow i `Errors` operativni red;
+- uvedeno je bezbedno ponavljanje spoljnih koraka;
+- Sheets greške i uspesi razdvojeni su bez paralelne lažne uspešne grane;
+- definisani su čuvanje logova, backup, vraćanje sistema i obrada incidenta;
+- provereno je da tajne i lični podaci nisu u Git repozitorijumu;
+- napravljen je dokaz testova u `Testing/segment-2-reliability.md`;
+- napravljeno je operativno uputstvo `Docs/operations-runbook.md`.
 
-Završeno kada:
+Dokaz završetka:
 
-- simulirani kvar ne proizvodi lažnu potvrdu korisniku;
-- operater saznaje za neuspeh;
-- postoji proverena procedura oporavka.
+- simulirani kvarovi ne proizvode lažnu potvrdu korisniku;
+- incident se upisuje u `Errors` tab sa redigovanom porukom;
+- postoji proverena procedura oporavka i hladni backup;
+- v1.1 je objavljen, v1.0.1 isključen, a restart je aktivirao tačno v1.1.
 
 ## Segment 3/8 — Stvarna predaja operateru
 
-Status: nije započeto
+Status: sledeći
 
 Uraditi:
 

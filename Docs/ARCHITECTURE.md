@@ -1032,6 +1032,19 @@ Greška se beleži i pokušaj se može ponoviti.
 
 AI traži pojašnjenje bez brisanja postojećih podataka.
 
+## Referentna implementacija pouzdanosti
+
+Project Atlas v1.1 uvodi referentni obrazac za kontrolisane kvarove:
+
+- ograničen retry za spoljne servise;
+- posebne fallback kodove za Knowledge Base, skladište podataka, AI i internu obradu;
+- zabranu potvrde prijema kada `saved` nije `true`;
+- centralni n8n error workflow;
+- redigovan operativni zapis u Google Sheets tabu `Errors`;
+- odvojeno rutiranje Sheets rezultata i greške kako paralelne grane ne bi proizvele lažan uspeh.
+
+Lokalni postupci za start, backup, vraćanje, čuvanje logova i obradu incidenta nalaze se u `Docs/operations-runbook.md`.
+
 ---
 
 # 17. Skalabilnost

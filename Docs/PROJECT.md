@@ -579,9 +579,42 @@ Korektivni eksport:
 
 ---
 
+## Project Atlas v1.1 — pouzdanost, greške i bezbednost
+
+Status: završeno i objavljeno u lokalnom n8n-u
+
+Datum završne provere: 20.07.2026.
+
+Urađeno:
+
+- spoljni Knowledge Base, Google Sheets i AI koraci imaju ograničen retry;
+- uvedeni su kontrolisani fallback odgovori koji ne daju lažnu potvrdu korisniku;
+- Sheets rezultat i greška prolaze kroz tri posebne IF kontrole, bez paralelne lažne uspešne grane;
+- napravljen je centralni `Project Atlas v1.1 - Error Handler`;
+- greške se rediguju i upisuju u Google Sheets tab `Errors` kao operativni redovi `OPEN` ili testni redovi `TEST`;
+- napravljen je i provereno otvoren hladni backup baze, konfiguracije, Atlas fajlova i v1.1 eksporta;
+- n8n je restartovan i `/healthz` je vratio HTTP 200;
+- startni log je aktivirao tačno v1.1, dok je v1.0.1 isključen;
+- automatska validacija v1.1: 88/88;
+- živi testovi Knowledge Base, Sheets, AI i centralnog error workflow-a su prošli;
+- testni lead `unknown-session` obrisan je preciznom zaštitom i naknadna pretraga je vratila prazan rezultat;
+- tajne, baza i n8n `config` nisu uneti u Git.
+
+Eksporti:
+
+- `Workflows/project-atlas-v1.1-ai-receptionist.json`
+- `Workflows/project-atlas-v1.1-error-handler.json`
+
+Dokaz i operativna procedura:
+
+- `Testing/segment-2-reliability.md`
+- `Docs/operations-runbook.md`
+
+---
+
 # Trenutna verzija proizvoda
 
-Project Atlas v1.0.1
+Project Atlas v1.1
 
 AI recepcionar sada može da:
 
@@ -593,12 +626,16 @@ AI recepcionar sada može da:
 - prestaje sa pitanjima kada je zahtev kompletan;
 - generiše operaterski rezime;
 - predaje kompletan zapis operateru kroz Google Sheets;
-- čuva završni status `handed_off`.
+- čuva završni status `handed_off`;
+- ponavlja privremeno neuspele spoljne korake u kontrolisanim granicama;
+- vraća bezbedan odgovor bez lažne potvrde kada Knowledge Base, Google Sheets ili AI nisu dostupni;
+- beleži redigovane incidente u centralnom `Errors` tabu;
+- može da se oporavi iz dokumentovanog i proverenog backup-a.
 
 ---
 
-# Nastavak razvoja posle v1.0.1
+# Nastavak razvoja posle v1.1
 
-AI Receptionist v1.0.1 je završen modul, ali komercijalni MVP cele platforme još nije završen.
+AI Receptionist v1.1 je stabilan lokalni modul, ali komercijalni MVP cele platforme još nije završen.
 
-Dalji rad se vodi prema dokumentu `Docs/master-roadmap.md`. Sledeći korak je Segment 2/8 — pouzdanost, greške i bezbednost.
+Dalji rad se vodi prema dokumentu `Docs/master-roadmap.md`. Sledeći korak je Segment 3/8 — stvarna predaja operateru.

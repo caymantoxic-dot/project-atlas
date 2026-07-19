@@ -1,0 +1,220 @@
+{
+  "name": "Project Atlas v1.1 - Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -160
+      ],
+      "id": "2facf9ce-4770-4130-ab3e-fb7ca1f328dd",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\nconst execution = input.execution || {};\nconst workflow = input.workflow || {};\nconst rawMessage = String(execution.error?.message || input.error?.message || 'Nepoznata greška');\nconst safeMessage = rawMessage\n  .replace(/(?:\\+381|0)6\\d[\\s\\/.-]?\\d{3}[\\s\\/.-]?\\d{3,4}/g, '[PHONE]')\n  .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi, '[EMAIL]')\n  .slice(0, 500);\nconst createdAt = new Date().toLocaleString('sv-SE', {\n  timeZone: 'Europe/Belgrade',\n  year: 'numeric', month: '2-digit', day: '2-digit',\n  hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false\n});\n\nreturn [{ json: {\n  created_at: createdAt,\n  status: (!execution.id && !workflow.id) ||\n    (execution.mode === 'manual' && workflow.name === 'Example Workflow') ? 'TEST' : 'OPEN',\n  workflow_id: String(workflow.id || ''),\n  workflow_name: String(workflow.name || ''),\n  execution_id: String(execution.id || ''),\n  execution_url: String(execution.url || ''),\n  last_node: String(execution.lastNodeExecuted || ''),\n  error_message: safeMessage,\n  retry_of: String(execution.retryOf || ''),\n  mode: String(execution.mode || '')\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -160
+      ],
+      "id": "0c991f18-a2d3-4267-b446-7d7f09a2948c",
+      "name": "Sanitize Error Record"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg",
+          "mode": "list",
+          "cachedResultName": "Project Atlas - Housekeeping Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "1311784010",
+          "mode": "list",
+          "cachedResultName": "Errors",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hNomH7Al5Cg72E9dv24L7Klc3uJrVbrP9VAaLDjgHgg/edit#gid=1311784010"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "created_at": "={{ $json.created_at }}",
+            "status": "={{ $json.status }}",
+            "workflow_id": "={{ $json.workflow_id }}",
+            "workflow_name": "={{ $json.workflow_name }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "execution_url": "={{ $json.execution_url }}",
+            "last_node": "={{ $json.last_node }}",
+            "error_message": "={{ $json.error_message }}",
+            "retry_of": "={{ $json.retry_of }}",
+            "mode": "={{ $json.mode }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow_id",
+              "displayName": "workflow_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow_name",
+              "displayName": "workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_url",
+              "displayName": "execution_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_node",
+              "displayName": "last_node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retry_of",
+              "displayName": "retry_of",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "c134eb8e-d8df-45b9-b8e7-67ff5accbf86",
+      "name": "Write Error Log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RI5VTCenYoItLapx",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sanitize Error Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize Error Record": {
+      "main": [
+        [
+          {
+            "node": "Write Error Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "availableInMCP": false
+  },
+  "versionId": "4b968d16-138a-4b3b-93dc-31b62b4d0f0e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3efead02804879ed98f95d4a9c7f390065f5b43c0d45993e885af335154c067c"
+  },
+  "nodeGroups": [],
+  "id": "ATLASERRS2X2026Z",
+  "tags": []
+}
