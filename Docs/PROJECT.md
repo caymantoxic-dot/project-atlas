@@ -557,9 +557,31 @@ Finalni eksport:
 
 ---
 
+## Korektivno izdanje v1.0.1
+
+Status: završeno i objavljeno u lokalnom n8n-u
+
+Datum završne provere: 19.07.2026.
+
+Urađeno:
+
+- ispravljeno je prepoznavanje izraza `za firmu` kao pravnog lica;
+- dodate su padežne varijante za poslovni prostor i kancelariju;
+- poslovni zahtev sada pravilno popunjava `customer_type` i `property_type`;
+- automatska validacija v1.0.1: 26/26;
+- živi poslovni scenario, korekcija telefona i korekcija kvadrature su prošli;
+- v1.0.1 je jedini aktivni Project Atlas workflow, a v1.0 je isključen;
+- potvrđeni testni redovi 6–9 uklonjeni su iz Google Sheets tabele.
+
+Korektivni eksport:
+
+`Workflows/project-atlas-v1.0.1-ai-receptionist.json`
+
+---
+
 # Trenutna verzija proizvoda
 
-Project Atlas v1.0
+Project Atlas v1.0.1
 
 AI recepcionar sada može da:
 
@@ -572,3 +594,11 @@ AI recepcionar sada može da:
 - generiše operaterski rezime;
 - predaje kompletan zapis operateru kroz Google Sheets;
 - čuva završni status `handed_off`.
+
+---
+
+# Nastavak razvoja posle v1.0.1
+
+AI Receptionist v1.0.1 je završen modul, ali komercijalni MVP cele platforme još nije završen.
+
+Dalji rad se vodi prema dokumentu `Docs/master-roadmap.md`. Sledeći korak je Segment 2/8 — pouzdanost, greške i bezbednost.
