@@ -1,10 +1,10 @@
 # Project Atlas — operativno uputstvo
 
-Datum provere: 20.07.2026.
+Datum provere: 22.07.2026.
 
 Ovo uputstvo važi za trenutno lokalno Windows + n8n okruženje. Produkciona procedura biće dopunjena u Segmentu 4.
 
-Trenutno objavljeno izdanje je `Project Atlas v1.1 - AI Receptionist`. v1.0.1 je zadržan kao neaktivna tačka povratka.
+Trenutno objavljeno izdanje je `Project Atlas v1.2 - AI Receptionist`, uz objavljeni `Project Atlas v1.2 - Error Handler`. Starija izdanja su arhivirana, a njihovi eksporti ostaju u Git repozitorijumu.
 
 ## Pokretanje i provera
 
@@ -21,10 +21,22 @@ Ako je n8n pokrenut u terminalu, zaustavlja se sa `Ctrl+C`. Ne kopirati ili vra�
 - proveriti da n8n `/healthz` vraća `ok`;
 - pregledati neuspešna n8n izvršenja;
 - otvoriti Google Sheets tab `Errors` i obraditi redove sa statusom `OPEN`;
+- otvoriti `Operator Queue` i proveriti leadove koji čekaju reakciju operatera;
+- proveriti poslovni Inbox za nove Atlas lead i error email poruke;
 - proveriti da nema neočekivanog rasta duplih leadova;
 - redovi sa statusom `TEST` služe samo kao dokaz kontrolisane probe.
 
-Kada je problem rešen, operater ručno menja `OPEN` u `CLOSED` i po potrebi dodaje objašnjenje u internu evidenciju. Segment 3 uvodi stvarnu email predaju i obaveštenje operateru.
+Kada je problem rešen, operater ručno menja `OPEN` u `CLOSED` i po potrebi dodaje objašnjenje u internu evidenciju. Novi `OPEN` incident šalje redigovano email upozorenje operateru; `TEST` zapis ne šalje email.
+
+## Email predaja operateru
+
+- kompletan lead prvo se čuva sa `notification_status='sending'`;
+- tek potvrđen SMTP rezultat postavlja `notification_status='sent'` i završni status `handed_off`;
+- `notification_key` i status `sent` sprečavaju ponovno slanje istog obaveštenja;
+- neuspešno slanje postavlja `notification_status='failed'` i status `notification_failed`, čuva redigovanu grešku i dozvoljava kontrolisan novi pokušaj;
+- `notification_attempts`, poslednji pokušaj, vreme slanja i SMTP message ID čuvaju se uz lead;
+- korisniku se ne potvrđuje email predaja dok SMTP rezultat i čuvanje završnog statusa nisu uspešni;
+- SMTP App Password ostaje isključivo u šifrovanom n8n credential-u `SMTP account` i nikada se ne kopira u dokumentaciju ili Git.
 
 ## Kontrolisani odgovori korisniku
 

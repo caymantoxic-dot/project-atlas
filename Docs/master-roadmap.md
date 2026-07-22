@@ -1,6 +1,6 @@
 # Project Atlas — MASTER ROADMAP
 
-Datum poslednje provere: 20.07.2026.
+Datum poslednje provere: 22.07.2026.
 
 Ovaj dokument je glavni redosled rada od završenog AI Receptionist modula do proizvoda koji može da se instalira i naplaćuje klijentu.
 
@@ -19,24 +19,27 @@ Ovaj dokument je glavni redosled rada od završenog AI Receptionist modula do pr
 - Završna v1.0 validacija: 21/21.
 - Korektivna v1.0.1 validacija: 26/26.
 - Segment 2 / v1.1 validacija: 88/88.
-- Trenutni glavni workflow: `Workflows/project-atlas-v1.1-ai-receptionist.json`.
-- Centralni error workflow: `Workflows/project-atlas-v1.1-error-handler.json`.
-- v1.1 je jedini aktivni Project Atlas AI Receptionist; v1.0.1 i v1.0 su isključeni.
+- Segment 3 / v1.2 validacija: 99/99.
+- Trenutni glavni workflow: `Workflows/project-atlas-v1.2-ai-receptionist.json`.
+- Centralni error workflow: `Workflows/project-atlas-v1.2-error-handler.json`.
+- v1.2 je jedini objavljeni Project Atlas AI Receptionist; starije verzije su arhivirane.
 - Živi testovi su potvrdili paralelne sesije, ispravke telefona i kvadrature, FAQ, dubinsko pranje i poslovni scenario.
 - Živi failure testovi su potvrdili kontrolisane kvarove Knowledge Base, Google Sheets i AI-ja bez lažne potvrde korisniku.
 - Error workflow je upisao redigovan `TEST` zapis u Google Sheets tab `Errors`.
 - Proveren je hladni backup `C:\Users\dalib\.n8n\backups\project-atlas-segment-2-cold-20260720-002656` i restart n8n-a.
+- Proveren je finalni v1.2 backup `C:\Users\dalib\.n8n\backups\project-atlas-segment-3-final-20260722-115155`; integritet baze je `ok` i sadrži objavljene v1.2 workflow-e.
+- Završni restart je zadržao objavljene `Project Atlas v1.2 - AI Receptionist` i `Project Atlas v1.2 - Error Handler`; `/healthz` je vratio HTTP 200 i `{"status":"ok"}`.
 - Testni Google Sheets redovi 6–9 uklonjeni su 19.07.2026; pretraga za `ATLAS` vratila je 0 rezultata.
 - Dodatni probni lead `unknown-session` precizno je uklonjen; naknadna pretraga vratila je prazan rezultat.
 - Google Sheets trenutno služi kao evidencija leadova i istorije razgovora.
 
 ## Poznata ograničenja trenutne verzije
 
-- `handed_off` znači da je rezime upisan u Google Sheets; operater još ne dobija stvarnu email ili drugu notifikaciju.
+- `handed_off` znači da je Google Sheets zapis sačuvan i da je SMTP server potvrdio slanje emaila operateru.
 - Chat radi u lokalnom n8n okruženju; još nema javnu produkcionu adresu.
 - Knowledge Base i promptovi učitavaju se sa lokalne putanje i moraju se prilagoditi produkcionom serveru.
 - Nema Google Calendar zakazivanja, potvrda ni podsetnika.
-- `Errors` tab je trenutno operativni red grešaka koji se pregleda ručno; automatska email notifikacija operateru uvodi se u Segmentu 3.
+- `Errors` tab ostaje operativni red; novi `OPEN` incidenti dodatno šalju redigovano email upozorenje operateru.
 - Ponovno učitavanje ručnog n8n chata stvara novi `session_id`; trajni nastavak sesije mora da se reši u javnom web chatu u Segmentu 4.
 - Javni Chat Trigger nije uključen; javna webhook adresa namerno nije dostupna do Segmenta 4.
 - Nema pripremljenog instalacionog paketa, sajta, demo snimka, cenovnika, ugovora i pilot-klijenta.
@@ -89,14 +92,19 @@ Dokaz završetka:
 
 ## Segment 3/8 — Stvarna predaja operateru
 
-Status: sledeći
+Status: završeno
 
-Uraditi:
+Urađeno:
 
-- zadržati Google Sheets kao evidenciju;
-- poslati stvarnu email notifikaciju operateru sa strukturiranim rezimeom;
-- dodati jasan status slanja i zaštitu od duplih obaveštenja;
-- napraviti jednostavan operaterski pregled statusa leadova.
+- Google Sheets je zadržan kao evidencija leadova i statusa slanja;
+- stvarna SMTP email notifikacija šalje strukturirani operaterski rezime;
+- statusi `sending`, `sent` i `failed`, broj pokušaja, vreme i message ID čuvaju se uz lead;
+- stabilan notification ključ sprečava duplo obaveštenje;
+- `failed` stanje može bezbedno da se ponovi;
+- `Operator Queue` daje jednostavan operaterski pregled;
+- centralni Error Handler šalje redigovano email upozorenje za `OPEN` incidente;
+- automatska validacija je 99/99, a živi lead, deduplikacioni i produkcioni error email testovi su prošli;
+- dokaz je u `Testing/segment-3-operator-handoff.md`.
 
 Završeno kada:
 
@@ -106,7 +114,7 @@ Završeno kada:
 
 ## Segment 4/8 — Produkciono okruženje i javni web chat
 
-Status: nije započeto
+Status: sledeći
 
 Uraditi:
 

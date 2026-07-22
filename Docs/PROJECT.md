@@ -612,9 +612,42 @@ Dokaz i operativna procedura:
 
 ---
 
+## Project Atlas v1.2 — stvarna predaja operateru
+
+Status: završeno i objavljeno u lokalnom n8n-u
+
+Datum završne provere: 22.07.2026.
+
+Urađeno:
+
+- kompletan lead šalje strukturirani rezime operateru na poslovni email;
+- SMTP rezultat se čuva kroz statuse `sending`, `sent` i `failed`;
+- stabilan notification ključ sprečava duplo slanje;
+- neuspešno slanje se beleži i može kontrolisano da se ponovi;
+- korisnik ne dobija lažnu potvrdu pre uspešnog SMTP rezultata i čuvanja statusa;
+- Google Sheets `Operator Queue` prikazuje operativne podatke i status predaje;
+- centralni Error Handler šalje redigovano email upozorenje za produkcione `OPEN` incidente;
+- automatska validacija v1.2: 99/99;
+- živi lead email, deduplikacioni test i produkcioni error email test su prošli;
+- potvrđeni testni lead redovi su uklonjeni, a stariji workflow-i arhivirani;
+- finalni hladni backup `project-atlas-segment-3-final-20260722-115155` prošao je proveru integriteta;
+- završni restart i `/healthz` provera potvrdili su oba objavljena v1.2 workflow-a;
+- v1.2 je jedini objavljeni AI Receptionist workflow.
+
+Eksporti:
+
+- `Workflows/project-atlas-v1.2-ai-receptionist.json`
+- `Workflows/project-atlas-v1.2-error-handler.json`
+
+Dokaz:
+
+- `Testing/segment-3-operator-handoff.md`
+
+---
+
 # Trenutna verzija proizvoda
 
-Project Atlas v1.1
+Project Atlas v1.2
 
 AI recepcionar sada može da:
 
@@ -625,17 +658,20 @@ AI recepcionar sada može da:
 - dinamički procjenjuje kompletnost prema vrsti usluge;
 - prestaje sa pitanjima kada je zahtev kompletan;
 - generiše operaterski rezime;
-- predaje kompletan zapis operateru kroz Google Sheets;
-- čuva završni status `handed_off`;
+- predaje kompletan zapis operateru kroz Google Sheets i stvarni SMTP email;
+- čuva notification status, broj pokušaja, vreme slanja i SMTP message ID;
+- sprečava duplo email obaveštenje za isti kompletan lead;
+- čuva završni status `handed_off` tek posle potvrđenog slanja;
 - ponavlja privremeno neuspele spoljne korake u kontrolisanim granicama;
 - vraća bezbedan odgovor bez lažne potvrde kada Knowledge Base, Google Sheets ili AI nisu dostupni;
 - beleži redigovane incidente u centralnom `Errors` tabu;
+- šalje redigovano email upozorenje operateru za produkcioni `OPEN` incident;
 - može da se oporavi iz dokumentovanog i proverenog backup-a.
 
 ---
 
 # Nastavak razvoja posle v1.1
 
-AI Receptionist v1.1 je stabilan lokalni modul, ali komercijalni MVP cele platforme još nije završen.
+AI Receptionist v1.2 je stabilan lokalni modul, ali komercijalni MVP cele platforme još nije završen.
 
-Dalji rad se vodi prema dokumentu `Docs/master-roadmap.md`. Sledeći korak je Segment 3/8 — stvarna predaja operateru.
+Dalji rad se vodi prema dokumentu `Docs/master-roadmap.md`. Sledeći korak je Segment 4/8 — produkciono okruženje i javni web chat.
